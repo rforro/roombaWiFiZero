@@ -60,6 +60,11 @@ class RoombaFi(Thread):
             adapter = PyRoombaAdapter(self.port)
         except ConnectionError:
             logging.error("Error cannot open serial connection")
+            self.run_loop.set()
+            raise SystemExit
+        if adapter.request_voltage() == 0:
+            logging.error("Roomba is probably turned off, cannot continue")
+            self.run_loop.set()
             raise SystemExit
         adapter.change_mode_to_passive()
         adapter.start_data_stream(["Charging State", "Battery Charge", "Battery Capacity", "Current"])
@@ -68,7 +73,12 @@ class RoombaFi(Thread):
                               [40, 40, 40, 30, 10, 40, 30, 10, 80])
         self._set_phase_stop()
 
-        self.mqtt.connect(remove_localIP, 1883, 60)
+        try:
+            self.mqtt.connect(remove_localIP, 1883, 60)
+        except ConnectionRefusedError:
+            logging.error("Cannot establish mqtt connection")
+            self.run_loop.set()
+            raise SystemExit
         self.mqtt.loop_start()
         self.mqtt.subscribe("cmd", 1)
 
@@ -107,7 +117,7 @@ class RoombaFi(Thread):
 
             self.recv_cmd = ""
             self.mqtt.publish(TOPIC, json.dumps(self.doc), qos=1, retain=True)
-            sleep(0.5)
+            sleep(1)
 
         self.mqtt.disconnect()
         self.mqtt.loop_stop()
@@ -174,7 +184,6 @@ if __name__ == '__main__':
 
 
     def signal_term_handler(sigNum, frame):
-        print("sig set")
         run_loop.set()
 
 
