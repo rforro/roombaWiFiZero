@@ -1,13 +1,29 @@
 # roombaWiFiZero
 
-Proof of concept of emulating the original Roomba firmware. Thanks to service port on roombas, we can easily add WiFi to older models. The currently preffered method is to flash custom firmware into some microcontroller like esp8266 and connect to Homeassistant over MQTT. This makes it incompatible with other home automation systems. If we could emulate the behaviour of roombas with wifi using some microcontroller, we could achieve compatibility with virtually ani 3rd party software.
+Proof of concept, emulation of the original Roomba firmware so it can be added to 3rd party Smarthome platforms, which offers support for new models WiFi Roomba.
 
-## prequisiteis
-- raspi with raspbian
-- mosquitto installed
-- python3.7 installed
+## Motivation
+Thanks to service port on Roombas, we can easily connect a Microcontroller and add WiFi controllability to older models. The currently offered solution uses an ESP8266 microcontroller which connects over MQTT to Homeassistant. This makes it not only incompatible with other home automation systems but makes it dependent on MQTT. If we could emulate the behaviour of modern Roombas WiFi on board using some microcontroller, we could achieve compatibility with virtually ani 3rd party smarthome system.
 
-## Notes
+Following points have to be taken during implenation into account:
 
-- udp server has to run, it provides blid (inside hostname) and ip address of mqtt broker. The rest of information provided by udp server is basically worthless
-- mqtt broker has to use TLS, certificate doesn't matter but it has to exist, username is blid and password is freely chose
+- The actual communication with Roomba is based on MQTT protocol. The Roomba vacuum runs an MQTT broker with TLS enabled. This has to be emulated.  
+- UDP server which listens for broadcasts and expects the Roomba magic constant `irobotmcs`, has to run constantly. It provides blid (MQTT brokers username) and IP address to connect to. The rest of information (like Roombas capabilities) is basically worthless.
+
+## Proposed solution
+Install Mosquitto a MQTT broker into some microcomputer like Raspberry Pi and this Python script, which starts the UDP server for pairing and takes over the communication with Roomba vacuum.
+
+## Hardware prerequisites
+- Any Raspberry Pi or comparable microcomputer, preferably Raspberry Pi Zero 2 W
+- Step-Down voltage regulator
+- various Resistors
+
+
+## How to install
+foo bar
+
+## Contributions
+Any contributions to this project are welcomed, just create a PR.
+
+## Thanks to
+- Atsushi Sakai who wrote [PyRoombaAdapter](https://github.com/AtsushiSakai/PyRoombaAdapter)
